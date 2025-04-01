@@ -1,0 +1,74 @@
+app:
+  environment: development
+  log_level: debug
+  service_name: digital-discovery-sync
+  version: 1.0.0
+
+kafka:
+  brokers:
+    - localhost:9092
+  group_id: digital-discovery-sync
+  topic_prefix: postgres.digital_discovery.public
+  auto_offset_reset: earliest
+  security_enabled: false
+  sasl:
+    username: ""
+    password: ""
+
+es:
+  hosts:
+    - http://localhost:9200
+  index_prefix: digital-discovery
+  username: ""
+  password: ""
+  max_retries: 3
+  timeout: 30s
+  index_template: "{env}-{service}-{entity}-{yyyy-MM}"
+  index_lifecycle: hot-warm-cold
+  shard_count: 3
+  replica_count: 1
+  max_conns: 10
+  max_idle_conns: 5
+  connect_timeout: 30s
+  request_timeout: 30s
+  retry_backoff: 1s
+  enable_retry: true
+  enable_metrics: true
+  sniffer_enabled: true
+  gzip_enabled: true
+
+sync:
+  mode: "custom"
+  kafka_connect:
+    enabled: false
+    sink_connector:
+      url: "http://localhost:8083"
+      name: "elasticsearch-sink"
+      topic_prefix: "postgres.digital_discovery.public"
+  custom:
+    enabled: true
+    batch_size: 100
+    max_retries: 3
+    retry_delay: "5s"
+    max_retry_delay: 1h
+    backoff_factor: 2.0
+    failure_queue: failed-syncs
+    conflict_mode: timestamp
+
+monitoring:
+  enabled: false
+  metrics_port: 9090
+  tracing_enabled: true
+  otel_collector: http://localhost:4317
+  prometheus_path: /metrics
+  health_check_port: 8082
+  log_format: json
+  log_output: stdout
+
+circuit_breaker:
+  enabled: true
+  max_requests: 100
+  interval: 60s
+  timeout: 30s
+  rate_limit: 1000
+  rate_limit_period: 1m 

@@ -1,0 +1,48 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Output directories
+/bin/
+/obj/
+/out/
+*.o
+*.a
+
+# Dependency directories
+/vendor/
+
+# Go build artifacts
+*.log
+*.test
+*.prof
+*.sum
+
+# IDE/editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Go modules
+/go.sum
+/go.work
+/go.work.sum
+
+# Coverage reports
+*.cover
+*.cov
+coverage.out
+coverage/
+
+# Temporary and cache files
+*.tmp
+*.temp
+*.cache
+.DS_Store
+
+# Logs and debugging files
+debug.log
+trace.out

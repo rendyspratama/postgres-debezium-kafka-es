@@ -1,0 +1,23 @@
+{
+    "name": "postgres-source",
+    "config": {
+        "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+        "tasks.max": "1",
+        "database.hostname": "postgres",
+        "database.port": "5432",
+        "database.user": "debezium",
+        "database.password": "debezium",
+        "database.dbname": "digital_discovery",
+        "database.server.name": "postgres",
+        "topic.prefix": "postgres",
+        "schema.include.list": "public",
+        "table.include.list": "public.categories",
+        "plugin.name": "pgoutput",
+        "slot.name": "debezium_categories",
+        "publication.name": "dbz_publication",
+        "transforms": "unwrap",
+        "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+        "transforms.unwrap.drop.tombstones": "false",
+        "transforms.unwrap.delete.handling.mode": "rewrite"
+    }
+}
