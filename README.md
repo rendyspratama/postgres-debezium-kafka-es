@@ -1,20 +1,17 @@
 # Digital Discovery Platform
 
-This repository contains two main services:
-1. API Service - Handles HTTP requests and manages category data
-2. Sync Service - Synchronizes category data with Elasticsearch
+A microservices-based platform for managing and synchronizing category data between PostgreSQL and Elasticsearch using Debezium and Kafka.
 
-Please refer to the specific documentation for each service:
-- [API Service Documentation](./api/README.md)
-- [Sync Service Documentation](./sync/README.md)
+## Architecture
 
-## Prerequisites
+The platform consists of two main services:
+1. **API Service** - REST API for managing categories
+2. **Sync Service** - Handles data synchronization between PostgreSQL and Elasticsearch
 
-- Go 1.21 or later
-- Docker 24.0 or later
-- Docker Compose v2.0 or later
-- Make (for using Makefile commands)
-- PostgreSQL client (for database operations)
+### Technology Stack
+- **API Service**: Go, PostgreSQL
+- **Sync Service**: Go, Kafka, Debezium, Elasticsearch
+- **Infrastructure**: Docker, Docker Compose
 
 ## Project Structure
 
@@ -45,203 +42,163 @@ Please refer to the specific documentation for each service:
 - Debezium
 - Kafka UI
 
-## Setup and Running
+## Prerequisites
 
-### 1. Clone the Repository
+- Go 1.21 or later
+- Docker 24.0 or later
+- Docker Compose v2.0 or later
+- Make (for using Makefile commands)
+
+## Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd digital-discovery
+   ```
+
+2. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+3. **Start services**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Run migrations**
+   ```bash
+   make migrate-up
+   ```
+
+5. **Deploy connectors**
+   ```bash
+   ./scripts/deploy-source-connector.sh
+   ./scripts/deploy-sink-connector.sh
+   ```
+
+## API Endpoints
+
+### Categories API (v1)
 
 ```bash
-git clone <repository-url>
-cd digital-discovery
+# Create category
+curl -X POST http://localhost:8081/api/v1/categories \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test Category",
+    "description": "Test Description",
+    "status": 1
+  }'
+
+# Get category by ID
+curl -X GET http://localhost:8081/api/v1/categories/1
+
+# Update category
+curl -X PUT http://localhost:8081/api/v1/categories/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Category",
+    "description": "Updated Description",
+    "status": 1
+  }'
+
+# Delete category
+curl -X DELETE http://localhost:8081/api/v1/categories/1
 ```
 
-### 2. Environment Setup
+## Configuration
 
 Create a `.env` file in the root directory:
 
 ```env
-# Database
-POSTGRES_USER=user
-POSTGRES_PASSWORD=password
-POSTGRES_DB=digital_discovery
-
-# API
+# API Configuration
 API_PORT=8081
-```
+API_ENV=development
 
-### 3. Start Services
-
-Using Docker Compose:
-
-```bash
-# Start all services
-docker-compose up -d
-
-# Check service status
-docker-compose ps
-```
-
-### 4. Run Database Migrations
-
-```bash
-# Apply migrations
-make migrate-up
-
-# Verify migrations
-make migrate-verify
-
-# If needed, rollback migrations
-make migrate-down
-```
-
-### 5. Seed Initial Data
-
-```bash
-# Apply seed data
-make seed-apply
-```
-
-### 6. Build and Run API Service
-
-```bash
-# Build the API
-make build-api
-
-# Run the API
-make run-api
+# Database Configuration
+DB_HOST=postgres
+DB_PORT=5432
+DB_USER=user
+DB_PASSWORD=password
+DB_NAME=digital_discovery
+DB_SSL_MODE=disable
 ```
 
 ## Development
 
-### Running Tests
+### Running Locally
+
+```bash
+# Run with hot reload
+make run-api
+
+# Run tests
+make test-api
+
+# Build binary
+make build-api
+```
+
+### Database Migrations
+
+```bash
+# Run migrations
+make migrate-up
+
+# Rollback migrations
+make migrate-down
+
+# Check migration status
+make migrate-status
+```
+
+### Testing
 
 ```bash
 # Run all tests
-make test
+make test-api
 
 # Run specific test
-make test-categories
+go test ./handlers -v
 ```
 
-### Database Management
+## Monitoring
 
-```bash
-# Access database shell
-make db-shell
+- **Health Check**: http://localhost:8081/health
+- **Metrics**: http://localhost:8081/metrics
 
-# Backup database
-make db-backup
+## Error Handling
 
-# Restore database
-make db-restore
+The API uses standard HTTP status codes and returns errors in the following format:
+
+```json
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Error description"
+  }
+}
 ```
 
-### Monitoring
+## Middleware
 
-```bash
-# Monitor migrations
-make migrate-monitor
-
-# View metrics
-curl http://localhost:8081/metrics
-```
-
-## API Endpoints
-
-### Health Check
-```bash
-curl -X GET http://localhost:8081/health
-```
-
-### Categories API (v1)
-```bash
-# List categories
-curl -X GET http://localhost:8081/api/categories
-
-# Get single category
-curl -X GET "http://localhost:8081/api/categories?id=1"
-
-# Create category
-curl -X POST http://localhost:8081/api/categories \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Pulsa", "status": 1}'
-
-# Update category
-curl -X PUT "http://localhost:8081/api/categories?id=1" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Pulsa Updated", "status": 1}'
-
-# Delete category
-curl -X DELETE "http://localhost:8081/api/categories?id=1"
-```
-
-### Categories API (v2)
-```bash
-# List categories with pagination
-curl -X GET "http://localhost:8081/api/categories?page=1&per_page=10"
-```
-
-### Documentation
-```bash
-# View middleware documentation
-curl -X GET http://localhost:8081/docs/middleware
-```
-
-## Monitoring and Management
-
-- API Metrics: http://localhost:8081/metrics
-- Kafka UI: http://localhost:8080
-- Elasticsearch: http://localhost:9200
-
-## Troubleshooting
-
-### Common Issues
-
-1. Database Connection Issues
-   ```bash
-   # Check database logs
-   docker-compose logs postgres
-   
-   # Verify database connection
-   make db-shell
-   ```
-
-2. API Service Issues
-   ```bash
-   # Check API logs
-   docker-compose logs api
-   
-   # Restart API service
-   docker-compose restart api
-   ```
-
-3. Migration Issues
-   ```bash
-   # Check migration status
-   make migrate-status
-   
-   # Fix migration issues
-   make migrate-fix
-   ```
-### Logs
-
-```bash
-# View all logs
-docker-compose logs -f
-
-# View specific service logs
-docker-compose logs -f api
-docker-compose logs -f postgres
-```
+- Request ID tracking
+- CORS handling
+- Request logging
+- Error recovery
+- Authentication (if configured)
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
+1. Follow the Go code style guide
+2. Write tests for new features
+3. Update documentation
+4. Create a pull request
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
 
